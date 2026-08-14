@@ -1,0 +1,6 @@
+{
+  "name": "Focus Wave - Generador de Sonidos y Enfoque",
+  "description": "Mezclador de sonidos relajantes en tiempo real con temporizador Pomodoro, lista de tareas y estética zen Lofi para maximizar la concentración.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
