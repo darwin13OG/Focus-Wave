@@ -92,60 +92,79 @@ export const SoundMixer: React.FC<SoundMixerProps> = ({
   };
 
   return (
-    <div id="sound-mixer-container" className="space-y-6">
-      {/* Control Bar: Presets & Master Controls */}
-      <div className={`p-5 rounded-2xl border ${theme.cardBg} ${theme.cardBorder} space-y-4`}>
-        {/* Top row: Master Buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-400">
-              <Sliders className="w-5 h-5" />
+    <div id="sound-mixer-container" className="space-y-3.5 sm:space-y-5">
+      {/* Sleek Compact Control Strip: Master Actions & Horizontal Presets */}
+      <div className={`p-3 sm:p-4 rounded-2xl border ${theme.cardBg} ${theme.cardBorder} space-y-3 shadow-md`}>
+        {/* Top row: Section title / active badge & Compact Master Action Buttons */}
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          {/* Active status indicator */}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 shrink-0">
+              <Sliders className="w-4 h-4" />
             </div>
-            <div>
-              <h2 className="font-semibold text-base sm:text-lg tracking-wide text-white flex items-center gap-2">
-                <span>Mezclador de Sonidos</span>
-                {activeCount > 0 && (
-                  <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono whitespace-nowrap shrink-0 inline-block">
-                    {activeCount} activo{activeCount > 1 ? 's' : ''}
-                  </span>
-                )}
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h2 className="font-bold text-sm sm:text-base tracking-wide text-white whitespace-nowrap">
+                Mezclador
               </h2>
+              {activeCount > 0 && (
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono whitespace-nowrap">
+                  {activeCount} activo{activeCount > 1 ? 's' : ''}
+                </span>
+              )}
             </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
+          {/* Quick Action Button Group */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap shrink-0">
             {/* Master Mute / Unmute */}
             <button
               id="master-mute-btn"
               onClick={onToggleMasterMute}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-medium transition-all ${
                 isMasterMuted
-                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                  : 'bg-slate-800/60 text-slate-200 hover:bg-slate-700/80 border border-slate-700/50'
+                  ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40 ring-1 ring-rose-500/30'
+                  : 'bg-slate-800/80 text-slate-200 hover:bg-slate-700/90 border border-slate-700/60'
               }`}
+              title={isMasterMuted ? 'Reanudar todos los sonidos' : 'Silenciar todo temporalmente'}
             >
               {isMasterMuted ? (
                 <>
-                  <VolumeX className="w-4 h-4 text-rose-400" />
-                  <span>Silenciado</span>
+                  <VolumeX className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                  <span className="whitespace-nowrap">Silenciado</span>
                 </>
               ) : (
                 <>
-                  <Volume2 className="w-4 h-4 text-cyan-400" />
-                  <span>Silenciar Todo</span>
+                  <Volume2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span className="hidden xs:inline whitespace-nowrap">Silenciar</span>
                 </>
               )}
             </button>
 
-            {/* Random Preset Surprise */}
+            {/* Random Preset Generator */}
             <button
               id="random-mix-btn"
               onClick={onRandomMix}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-200 border border-cyan-500/30 transition-all shadow-sm"
-              title="Genera una combinación de ambiente al azar"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-medium bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-500/30 hover:to-blue-500/30 text-cyan-200 border border-cyan-500/30 transition-all shadow-sm shrink-0"
+              title="Generar mezcla aleatoria de ambiente"
             >
-              <Shuffle className="w-4 h-4 text-cyan-400" />
-              <span>Mezcla Aleatoria</span>
+              <Shuffle className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span className="hidden xs:inline whitespace-nowrap">Aleatorio</span>
+            </button>
+
+            {/* Save Custom Preset */}
+            <button
+              id="save-preset-btn"
+              onClick={() => setShowSaveModal(true)}
+              disabled={activeCount === 0}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-medium transition-all shrink-0 ${
+                activeCount > 0
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30'
+                  : 'bg-slate-800/30 text-slate-600 border border-slate-800/60 cursor-not-allowed opacity-50'
+              }`}
+              title="Guardar tu combinación actual como preset"
+            >
+              <BookmarkPlus className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline whitespace-nowrap">Guardar</span>
             </button>
 
             {/* Reset / Clear All */}
@@ -153,58 +172,46 @@ export const SoundMixer: React.FC<SoundMixerProps> = ({
               <button
                 id="reset-all-btn"
                 onClick={onResetAll}
-                className="px-3 py-2 rounded-xl text-xs font-medium text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all"
+                className="px-2 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all shrink-0"
+                title="Apagar todos los sonidos"
               >
-                Apagar Todos
+                Apagar
               </button>
             )}
-
-            {/* Save Custom Preset */}
-            <button
-              id="save-preset-btn"
-              onClick={() => setShowSaveModal(true)}
-              disabled={activeCount === 0}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                activeCount > 0
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30'
-                  : 'bg-slate-800/30 text-slate-600 border border-slate-800 cursor-not-allowed'
-              }`}
-            >
-              <BookmarkPlus className="w-3.5 h-3.5" />
-              <span>Guardar Mezcla</span>
-            </button>
           </div>
         </div>
 
-        {/* Presets Row */}
-        <div className="pt-2 border-t border-slate-800/60">
-          <p className="text-xs font-mono text-slate-400 mb-2 flex items-center gap-1">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Presets de Ambiente Recomendados:
-          </p>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {/* Horizontal Presets Carousel Strip */}
+        <div className="pt-2 border-t border-slate-800/60 flex items-center gap-2">
+          <div className="flex items-center gap-1 text-[11px] font-mono text-slate-400 shrink-0 pr-1">
+            <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />
+            <span className="hidden sm:inline">Presets:</span>
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 touch-pan-x min-w-0 flex-1">
             {DEFAULT_PRESETS.map((preset) => (
               <button
                 key={preset.id}
                 id={`preset-btn-${preset.id}`}
                 onClick={() => onApplyPreset(preset.volumes)}
-                className="whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-800/50 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-200 border border-slate-700/50 hover:border-cyan-500/30 transition-all"
+                className="whitespace-nowrap px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800/60 hover:bg-cyan-500/20 text-slate-300 hover:text-cyan-200 border border-slate-700/50 hover:border-cyan-500/30 transition-all shrink-0"
               >
                 {preset.name}
               </button>
             ))}
 
-            {/* Custom Presets */}
+            {/* Custom Saved Presets */}
             {customPresets.map((preset) => (
               <div
                 key={preset.id}
                 onClick={() => onApplyPreset(preset.volumes)}
-                className="group flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 transition-all cursor-pointer"
+                className="group flex items-center gap-1.5 whitespace-nowrap px-2.5 py-1 rounded-lg text-xs font-medium bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition-all cursor-pointer shrink-0"
               >
                 <span>{preset.name}</span>
                 <button
                   onClick={(e) => handleDeleteCustomPreset(preset.id, e)}
                   title="Eliminar mezcla guardada"
-                  className="opacity-60 hover:opacity-100 hover:text-rose-400 transition-opacity"
+                  className="opacity-60 group-hover:opacity-100 hover:text-rose-400 transition-opacity"
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>
@@ -214,8 +221,8 @@ export const SoundMixer: React.FC<SoundMixerProps> = ({
         </div>
       </div>
 
-      {/* Grid of 6 Channels */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Grid of Sound Channels - Appears directly above the fold */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {channels.map((channel) => (
           <SoundCard
             key={channel.id}

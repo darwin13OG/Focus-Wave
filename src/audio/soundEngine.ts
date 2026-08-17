@@ -91,6 +91,91 @@ class SoundEngine {
       brownData[i] *= 3.5; // Gain adjustment
     }
     this.noiseBuffers.set('brown', brownBuffer);
+
+    // 4. Procedural Realistic Cozy Fireplace Crackle Buffer (Stereo, 8 seconds, organic & slow)
+    const fireDuration = 8;
+    const fireSampleRate = this.ctx.sampleRate;
+    const fireBuffer = this.ctx.createBuffer(2, fireSampleRate * fireDuration, fireSampleRate);
+    const leftChannel = fireBuffer.getChannelData(0);
+    const rightChannel = fireBuffer.getChannelData(1);
+
+    // Natural, relaxed pacing: ~38 micro-crackle events per second with organic clustering
+    const totalEvents = Math.floor(fireDuration * 38);
+    for (let e = 0; e < totalEvents; e++) {
+      const startSample = Math.floor(Math.random() * (fireSampleRate * fireDuration - fireSampleRate * 0.06));
+      const pan = Math.random(); // Stereo balance
+      const randType = Math.random();
+
+      if (randType < 0.72) {
+        // A. Soft ember spark & gentle wood fissure (Noise-based micro-snap, NO sine waves)
+        const decayTime = 0.003 + Math.random() * 0.007; // 3ms - 10ms
+        const amp = 0.08 + Math.random() * 0.16;
+        const len = Math.min(Math.floor(decayTime * fireSampleRate * 4), fireSampleRate * fireDuration - startSample);
+        
+        // Simple 1-pole filter state for warm crisp texture
+        let prev = 0;
+        const filterCoeff = 0.35 + Math.random() * 0.3;
+
+        for (let i = 0; i < len; i++) {
+          const t = i / fireSampleRate;
+          const env = Math.exp(-t / decayTime);
+          const rawNoise = Math.random() * 2 - 1;
+          prev = prev * filterCoeff + rawNoise * (1 - filterCoeff);
+          const val = amp * (rawNoise * 0.6 + prev * 0.4) * env;
+          leftChannel[startSample + i] += val * (1 - pan);
+          rightChannel[startSample + i] += val * pan;
+        }
+      } else if (randType < 0.94) {
+        // B. Muffled warm wood pop (gas pocket releasing, warm low-passed noise)
+        const decayTime = 0.008 + Math.random() * 0.018; // 8ms - 26ms
+        const amp = 0.12 + Math.random() * 0.18;
+        const len = Math.min(Math.floor(decayTime * fireSampleRate * 4), fireSampleRate * fireDuration - startSample);
+
+        let lp = 0;
+        for (let i = 0; i < len; i++) {
+          const t = i / fireSampleRate;
+          const env = Math.exp(-t / decayTime);
+          const rawNoise = Math.random() * 2 - 1;
+          lp = lp * 0.82 + rawNoise * 0.18; // Warm lowpass
+          const val = amp * lp * env;
+          leftChannel[startSample + i] += val * (1 - pan);
+          rightChannel[startSample + i] += val * pan;
+        }
+      } else {
+        // C. Micro resin sizzle (cluster of 3-5 tiny sparks)
+        const sparks = 3 + Math.floor(Math.random() * 3);
+        for (let s = 0; s < sparks; s++) {
+          const subStart = startSample + Math.floor(s * (fireSampleRate * (0.004 + Math.random() * 0.006)));
+          if (subStart >= fireSampleRate * fireDuration - fireSampleRate * 0.02) continue;
+          const decayTime = 0.0015 + Math.random() * 0.004;
+          const amp = 0.04 + Math.random() * 0.07;
+          const len = Math.min(Math.floor(decayTime * fireSampleRate * 3), fireSampleRate * fireDuration - subStart);
+
+          for (let i = 0; i < len; i++) {
+            const t = i / fireSampleRate;
+            const env = Math.exp(-t / decayTime);
+            const val = amp * (Math.random() * 2 - 1) * env;
+            leftChannel[subStart + i] += val * (1 - pan);
+            rightChannel[subStart + i] += val * pan;
+          }
+        }
+      }
+    }
+
+    // Normalize fire crackle buffer to prevent clipping and ensure comfortable warm volume
+    let maxPeak = 0;
+    for (let i = 0; i < leftChannel.length; i++) {
+      if (Math.abs(leftChannel[i]) > maxPeak) maxPeak = Math.abs(leftChannel[i]);
+      if (Math.abs(rightChannel[i]) > maxPeak) maxPeak = Math.abs(rightChannel[i]);
+    }
+    if (maxPeak > 0) {
+      const normFactor = 0.80 / maxPeak;
+      for (let i = 0; i < leftChannel.length; i++) {
+        leftChannel[i] *= normFactor;
+        rightChannel[i] *= normFactor;
+      }
+    }
+    this.noiseBuffers.set('fire_crackle', fireBuffer);
   }
 
   public setChannelVolume(id: SoundId, volume: number, isMuted: boolean) {
@@ -201,41 +286,93 @@ class SoundEngine {
   private createThunderSound(gainNode: GainNode) {
     if (!this.ctx) return;
     const brownBuffer = this.noiseBuffers.get('brown');
-    if (!brownBuffer) return;
+    const pinkBuffer = this.noiseBuffers.get('pink');
+    if (!brownBuffer || !pinkBuffer) return;
 
-    const noiseSource = this.ctx.createBufferSource();
-    noiseSource.buffer = brownBuffer;
-    noiseSource.loop = true;
+    // 1. Continuous ambient storm bed (audible baseline atmosphere)
+    const bedSource = this.ctx.createBufferSource();
+    bedSource.buffer = brownBuffer;
+    bedSource.loop = true;
 
-    const filter = this.ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(140, this.ctx.currentTime);
+    const bedFilter = this.ctx.createBiquadFilter();
+    bedFilter.type = 'bandpass';
+    bedFilter.frequency.setValueAtTime(220, this.ctx.currentTime);
+    bedFilter.Q.setValueAtTime(1.2, this.ctx.currentTime);
 
-    const rumbleGain = this.ctx.createGain();
-    rumbleGain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+    const bedGain = this.ctx.createGain();
+    bedGain.gain.setValueAtTime(0.35, this.ctx.currentTime);
 
-    noiseSource.connect(filter);
-    filter.connect(rumbleGain);
-    rumbleGain.connect(gainNode);
+    bedSource.connect(bedFilter);
+    bedFilter.connect(bedGain);
+    bedGain.connect(gainNode);
+    bedSource.start();
 
-    noiseSource.start();
+    // 2. Dynamic rolling thunderclap synthesis
+    let thunderTimeout: ReturnType<typeof setTimeout> | null = null;
+    let isRunning = true;
 
-    // Thunder roll interval
-    const interval = setInterval(() => {
-      if (!this.ctx || !this.activeNodes.has('thunder')) return;
-      if (Math.random() < 0.3) { // 30% chance of thunder burst every few seconds
-        const now = this.ctx.currentTime;
-        rumbleGain.gain.cancelScheduledValues(now);
-        rumbleGain.gain.setValueAtTime(0.3, now);
-        rumbleGain.gain.linearRampToValueAtTime(0.95, now + 0.6); // Clap
-        rumbleGain.gain.exponentialRampToValueAtTime(0.2, now + 3.5); // Rolling echo
-      }
-    }, 4500);
+    const triggerThunderRoll = () => {
+      if (!this.ctx || !isRunning || !this.activeNodes.has('thunder')) return;
+
+      const now = this.ctx.currentTime;
+      const rollDuration = 3.5 + Math.random() * 2.5; // 3.5s to 6s roll
+
+      // Low boom source (brown noise)
+      const rollSource = this.ctx.createBufferSource();
+      rollSource.buffer = brownBuffer;
+
+      const rollFilter = this.ctx.createBiquadFilter();
+      rollFilter.type = 'lowpass';
+      rollFilter.frequency.setValueAtTime(450, now);
+      rollFilter.frequency.exponentialRampToValueAtTime(180, now + rollDuration);
+
+      const rollGain = this.ctx.createGain();
+      const peakVol = 0.6 + Math.random() * 0.35;
+      rollGain.gain.setValueAtTime(0.01, now);
+      rollGain.gain.linearRampToValueAtTime(peakVol, now + 0.35 + Math.random() * 0.3);
+      rollGain.gain.exponentialRampToValueAtTime(0.15, now + rollDuration * 0.6);
+      rollGain.gain.exponentialRampToValueAtTime(0.001, now + rollDuration);
+
+      // Mid crackle/rumble body for mobile clarity (pink noise)
+      const midSource = this.ctx.createBufferSource();
+      midSource.buffer = pinkBuffer;
+
+      const midFilter = this.ctx.createBiquadFilter();
+      midFilter.type = 'bandpass';
+      midFilter.frequency.setValueAtTime(320 + Math.random() * 180, now);
+      midFilter.Q.setValueAtTime(2.0, now);
+
+      const midGain = this.ctx.createGain();
+      midGain.gain.setValueAtTime(0.01, now);
+      midGain.gain.linearRampToValueAtTime(peakVol * 0.45, now + 0.4);
+      midGain.gain.exponentialRampToValueAtTime(0.001, now + rollDuration * 0.8);
+
+      rollSource.connect(rollFilter);
+      rollFilter.connect(rollGain);
+      rollGain.connect(gainNode);
+
+      midSource.connect(midFilter);
+      midFilter.connect(midGain);
+      midGain.connect(gainNode);
+
+      rollSource.start(now);
+      rollSource.stop(now + rollDuration + 0.1);
+      midSource.start(now);
+      midSource.stop(now + rollDuration + 0.1);
+
+      // Schedule next thunder roll in 4 to 8 seconds
+      const nextDelay = 4000 + Math.random() * 4500;
+      thunderTimeout = setTimeout(triggerThunderRoll, nextDelay);
+    };
+
+    // Trigger initial thunder boom shortly after activation (0.4s)
+    thunderTimeout = setTimeout(triggerThunderRoll, 400);
 
     this.activeNodes.set('thunder', {
       stop: () => {
-        clearInterval(interval);
-        try { noiseSource.stop(); } catch {}
+        isRunning = false;
+        if (thunderTimeout) clearTimeout(thunderTimeout);
+        try { bedSource.stop(); } catch {}
       }
     });
   }
@@ -294,60 +431,133 @@ class SoundEngine {
   // --- Fireplace Generator ---
   private createFireplaceSound(gainNode: GainNode) {
     if (!this.ctx) return;
+    const crackleBuffer = this.noiseBuffers.get('fire_crackle');
     const brownBuffer = this.noiseBuffers.get('brown');
-    const whiteBuffer = this.noiseBuffers.get('white');
-    if (!brownBuffer || !whiteBuffer) return;
+    const pinkBuffer = this.noiseBuffers.get('pink');
+    if (!crackleBuffer || !brownBuffer || !pinkBuffer) return;
 
-    // 1. Warm flame roar
-    const roarSource = this.ctx.createBufferSource();
-    roarSource.buffer = brownBuffer;
-    roarSource.loop = true;
+    // 1. Organic Stereo Wood Crackle Bed (Continuous soothing natural crackle)
+    const crackleSource = this.ctx.createBufferSource();
+    crackleSource.buffer = crackleBuffer;
+    crackleSource.loop = true;
 
-    const roarFilter = this.ctx.createBiquadFilter();
-    roarFilter.type = 'lowpass';
-    roarFilter.frequency.setValueAtTime(350, this.ctx.currentTime);
+    const crackleWarmthFilter = this.ctx.createBiquadFilter();
+    crackleWarmthFilter.type = 'lowpass';
+    crackleWarmthFilter.frequency.setValueAtTime(2800, this.ctx.currentTime);
 
-    const roarGain = this.ctx.createGain();
-    roarGain.gain.setValueAtTime(0.6, this.ctx.currentTime);
+    const crackleGain = this.ctx.createGain();
+    crackleGain.gain.setValueAtTime(0.70, this.ctx.currentTime);
 
-    roarSource.connect(roarFilter);
-    roarFilter.connect(roarGain);
-    roarGain.connect(gainNode);
-    roarSource.start();
+    crackleSource.connect(crackleWarmthFilter);
+    crackleWarmthFilter.connect(crackleGain);
+    crackleGain.connect(gainNode);
+    crackleSource.start();
 
-    // 2. Crackle / Pop generator
-    const crackleInterval = setInterval(() => {
-      if (!this.ctx || !this.activeNodes.has('fireplace')) return;
-      const popCount = Math.floor(Math.random() * 3) + 1;
-      for (let i = 0; i < popCount; i++) {
-        const delay = Math.random() * 0.1;
-        const now = this.ctx.currentTime + delay;
-        
-        const popSource = this.ctx.createBufferSource();
-        popSource.buffer = whiteBuffer;
-        
-        const popFilter = this.ctx.createBiquadFilter();
-        popFilter.type = 'highpass';
-        popFilter.frequency.setValueAtTime(1500 + Math.random() * 2000, now);
+    // 2. Steady Deep Hearth & Burning Log Warmth (Subtle low-end body)
+    const emberSource = this.ctx.createBufferSource();
+    emberSource.buffer = brownBuffer;
+    emberSource.loop = true;
 
-        const popGain = this.ctx.createGain();
-        const vol = 0.03 + Math.random() * 0.08;
-        popGain.gain.setValueAtTime(vol, now);
-        popGain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+    const emberFilter = this.ctx.createBiquadFilter();
+    emberFilter.type = 'lowpass';
+    emberFilter.frequency.setValueAtTime(160, this.ctx.currentTime);
 
-        popSource.connect(popFilter);
-        popFilter.connect(popGain);
-        popGain.connect(gainNode);
+    const emberGain = this.ctx.createGain();
+    emberGain.gain.setValueAtTime(0.32, this.ctx.currentTime);
 
-        popSource.start(now);
-        popSource.stop(now + 0.04);
+    emberSource.connect(emberFilter);
+    emberFilter.connect(emberGain);
+    emberGain.connect(gainNode);
+    emberSource.start();
+
+    // 3. Subtle Warm Glowing Charcoal Air (Gentle steady whisper of heat)
+    const airSource = this.ctx.createBufferSource();
+    airSource.buffer = pinkBuffer;
+    airSource.loop = true;
+
+    const airFilter = this.ctx.createBiquadFilter();
+    airFilter.type = 'bandpass';
+    airFilter.frequency.setValueAtTime(750, this.ctx.currentTime);
+    airFilter.Q.setValueAtTime(0.4, this.ctx.currentTime);
+
+    const airGain = this.ctx.createGain();
+    airGain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+
+    airSource.connect(airFilter);
+    airFilter.connect(airGain);
+    airGain.connect(gainNode);
+    airSource.start();
+
+    // 4. Natural Occasional Wood Fiber Fracture (Soft, non-tonal, every 4-8s)
+    let isRunning = true;
+    let popTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const triggerNaturalWoodPop = () => {
+      if (!this.ctx || !isRunning || !this.activeNodes.has('fireplace')) return;
+
+      const now = this.ctx.currentTime;
+      const whiteBuffer = this.noiseBuffers.get('white');
+      const brownBuff = this.noiseBuffers.get('brown');
+
+      // Soft non-tonal wood fracture snap
+      if (whiteBuffer) {
+        const snapSource = this.ctx.createBufferSource();
+        snapSource.buffer = whiteBuffer;
+
+        const snapFilter = this.ctx.createBiquadFilter();
+        snapFilter.type = 'bandpass';
+        snapFilter.frequency.setValueAtTime(950 + Math.random() * 600, now);
+        snapFilter.Q.setValueAtTime(1.6, now);
+
+        const snapGain = this.ctx.createGain();
+        snapGain.gain.setValueAtTime(0.045 + Math.random() * 0.035, now);
+        snapGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.016);
+
+        snapSource.connect(snapFilter);
+        snapFilter.connect(snapGain);
+        snapGain.connect(gainNode);
+
+        snapSource.start(now);
+        snapSource.stop(now + 0.02);
       }
-    }, 180);
+
+      // Soft muffled low thump
+      if (brownBuff) {
+        const thumpSource = this.ctx.createBufferSource();
+        thumpSource.buffer = brownBuff;
+
+        const thumpFilter = this.ctx.createBiquadFilter();
+        thumpFilter.type = 'lowpass';
+        thumpFilter.frequency.setValueAtTime(120, now);
+
+        const thumpGain = this.ctx.createGain();
+        thumpGain.gain.setValueAtTime(0.06 + Math.random() * 0.04, now);
+        thumpGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+
+        thumpSource.connect(thumpFilter);
+        thumpFilter.connect(thumpGain);
+        thumpGain.connect(gainNode);
+
+        thumpSource.start(now);
+        thumpSource.stop(now + 0.04);
+      }
+
+      // Schedule next natural wood pop (every 3.5 to 7.5 seconds)
+      const nextDelay = 3500 + Math.random() * 4000;
+      popTimeout = setTimeout(triggerNaturalWoodPop, nextDelay);
+    };
+
+    popTimeout = setTimeout(triggerNaturalWoodPop, 2000);
 
     this.activeNodes.set('fireplace', {
       stop: () => {
-        clearInterval(crackleInterval);
-        try { roarSource.stop(); } catch {}
+        isRunning = false;
+        if (popTimeout) clearTimeout(popTimeout);
+        try {
+          crackleSource.stop();
+          emberSource.stop();
+          airSource.stop();
+        } catch {}
       }
     });
   }

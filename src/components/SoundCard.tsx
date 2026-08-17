@@ -50,9 +50,9 @@ export const SoundCard: React.FC<SoundCardProps> = ({
   return (
     <div
       id={`sound-card-${channel.id}`}
-      className={`relative group rounded-2xl p-5 border transition-all duration-300 ${
+      className={`relative group rounded-2xl p-3.5 sm:p-4.5 border transition-all duration-300 ${
         isActive
-          ? `${theme.cardBg} ${channel.color} border-opacity-60 shadow-lg shadow-black/20 ring-1 ring-white/10 scale-[1.01]`
+          ? `${theme.cardBg} ${channel.color} border-opacity-60 shadow-lg shadow-black/25 ring-1 ring-white/10 scale-[1.008]`
           : `${theme.cardBg} ${theme.cardBorder} hover:border-slate-700/80`
       }`}
     >
@@ -61,24 +61,24 @@ export const SoundCard: React.FC<SoundCardProps> = ({
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
       )}
 
-      <div className="relative z-10 flex flex-col h-full justify-between gap-4">
+      <div className="relative z-10 flex flex-col h-full justify-between gap-3 sm:gap-3.5">
         {/* Header row: Icon, Name & Equalizer/Mute */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+        <div className="flex items-start justify-between gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
             <div
-              className={`p-3 rounded-xl transition-all duration-300 ${
+              className={`p-2.5 rounded-xl transition-all duration-300 shrink-0 ${
                 isActive
-                  ? 'bg-white/10 text-white shadow-inner scale-105'
+                  ? 'bg-white/15 text-white shadow-inner scale-105'
                   : 'bg-slate-800/40 text-slate-400 group-hover:text-slate-200'
               }`}
             >
               {renderIcon()}
             </div>
-            <div>
-              <h3 className={`font-semibold text-base tracking-wide ${isActive ? 'text-white' : theme.textColor}`}>
+            <div className="min-w-0">
+              <h3 className={`font-semibold text-sm sm:text-base tracking-wide truncate ${isActive ? 'text-white' : theme.textColor}`}>
                 {channel.name}
               </h3>
-              <p className={`text-xs ${theme.mutedText} line-clamp-1`}>
+              <p className={`text-xs ${theme.mutedText} truncate`}>
                 {channel.description}
               </p>
             </div>
@@ -89,7 +89,7 @@ export const SoundCard: React.FC<SoundCardProps> = ({
             id={`mute-btn-${channel.id}`}
             onClick={() => onToggleMute(channel.id)}
             title={channel.isMuted ? 'Activar sonido' : 'Silenciar canal'}
-            className={`p-2 rounded-lg transition-all duration-200 ${
+            className={`p-2 rounded-xl transition-all duration-200 shrink-0 ${
               channel.isMuted
                 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                 : isActive
@@ -106,20 +106,20 @@ export const SoundCard: React.FC<SoundCardProps> = ({
         </div>
 
         {/* Active Equalizer Bar Indicator */}
-        <div className="flex items-center justify-between text-xs px-1">
-          <span className="text-[11px] font-mono tracking-wider text-slate-400 uppercase">
+        <div className="flex items-center justify-between text-xs px-0.5">
+          <span className="text-[10px] sm:text-[11px] font-mono tracking-wider text-slate-400 uppercase">
             Volumen
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {isActive && (
-              <div className="flex items-end gap-0.5 h-3">
+              <div className="flex items-end gap-0.5 h-2.5">
                 <span className="w-0.5 h-full bg-current rounded-full animate-bounce [animation-delay:-0.3s]" />
                 <span className="w-0.5 h-2/3 bg-current rounded-full animate-bounce [animation-delay:-0.15s]" />
                 <span className="w-0.5 h-full bg-current rounded-full animate-bounce" />
               </div>
             )}
             <span
-              className={`font-mono font-medium ${
+              className={`font-mono text-xs ${
                 isActive ? 'text-white font-semibold' : 'text-slate-500'
               }`}
             >
@@ -128,8 +128,8 @@ export const SoundCard: React.FC<SoundCardProps> = ({
           </div>
         </div>
 
-        {/* Volume Slider */}
-        <div className="relative flex items-center">
+        {/* Volume Slider with comfortable touch hit area */}
+        <div className="relative flex items-center py-1">
           <input
             id={`volume-slider-${channel.id}`}
             type="range"
@@ -137,7 +137,7 @@ export const SoundCard: React.FC<SoundCardProps> = ({
             max="100"
             value={channel.isMuted ? 0 : channel.volume}
             onChange={(e) => onVolumeChange(channel.id, Number(e.target.value))}
-            className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+            className="w-full h-2.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
           />
         </div>
       </div>

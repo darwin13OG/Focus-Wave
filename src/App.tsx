@@ -139,17 +139,17 @@ export default function App() {
       {!isStarted && <StartSessionOverlay onStart={handleStartSession} />}
 
       {/* Main Layout Container */}
-      <div className="relative z-10 max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
+      <div className="relative z-10 max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-2.5 sm:py-6 space-y-3 sm:space-y-5">
         {/* Top Header / Navigation Bar */}
-        <header className="p-3 sm:p-4 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-slate-800/80 shadow-lg flex items-center justify-between gap-3">
+        <header className="p-2.5 sm:p-4 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-slate-800/80 shadow-lg flex items-center justify-between gap-2.5">
           {/* Brand Logo & Name */}
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-slate-950 font-bold shadow-md shadow-cyan-500/20 shrink-0">
-              <Waves className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-1.5 sm:p-2.5 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-slate-950 font-bold shadow-md shadow-cyan-500/20 shrink-0">
+              <Waves className="w-4 h-4 sm:w-6 sm:h-6 stroke-[2.5]" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <h1 className="text-base sm:text-xl font-extrabold tracking-tight text-white whitespace-nowrap">
+                <h1 className="text-sm sm:text-xl font-extrabold tracking-tight text-white whitespace-nowrap">
                   FOCUS WAVE
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 whitespace-nowrap">
@@ -299,13 +299,10 @@ export default function App() {
           )}
         </main>
 
-        {/* Minimalist Footer */}
-        <footer className="pt-8 pb-4 border-t border-slate-800/60 text-center text-xs text-slate-500 space-y-2">
-          <p className="flex items-center justify-center gap-1.5">
-            Creado para momentos de enfoque profundo, relajación y estudio tranquilo.
-          </p>
-          <p className="font-mono text-[11px] text-slate-600">
-            Focus Wave © {new Date().getFullYear()} • Sonidos en tiempo real sin dependencias externas
+        {/* Minimalist Ultra-Clean Footer */}
+        <footer className="pt-4 pb-2 border-t border-slate-800/40 text-center">
+          <p className="text-[11px] text-slate-500 font-mono tracking-tight">
+            Focus Wave • Sonidos ambientales y concentración
           </p>
         </footer>
       </div>
