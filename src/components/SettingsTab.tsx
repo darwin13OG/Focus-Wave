@@ -170,6 +170,21 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
           })}
         </div>
       </div>
+
+      {/* PWA & Offline Status Card */}
+      <div className="p-6 rounded-3xl bg-slate-900/80 backdrop-blur-md border border-slate-800 shadow-xl space-y-3">
+        <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+          <RotateCcw className="w-4 h-4 text-cyan-400" /> Compatibilidad PWA y Modo Offline
+        </h3>
+        <p className="text-xs text-slate-300 leading-relaxed">
+          Focus Wave está configurado como una <strong>Progressive Web App (PWA)</strong>. Toda la interfaz, el temporizador Pomodoro, ejercicios de respiración y tus tareas guardadas funcionan 100% sin conexión a internet.
+        </p>
+        <div className="p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-[11px] text-slate-400 space-y-1.5 font-mono">
+          <p className="text-cyan-300 font-semibold">• Pantalla Principal & UI: Guardada en Service Worker (Cache-First)</p>
+          <p className="text-slate-300">• Audios en Tiempo Real: Se almacenan en caché automáticamente tras la primera reproducción</p>
+          <p className="text-slate-300">• Modo Sin Conexión: Alerta informativa inteligente cuando no hay red</p>
+        </div>
+      </div>
     </div>
   );
 };

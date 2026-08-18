@@ -55,3 +55,11 @@ export interface ThemePalette {
   particleColor: string;
   isDark: boolean;
 }
+
+export interface BinauralPreset {
+  id: string;
+  name: string;
+  description: string;
+  frequency: number; // in Hz (e.g. 10 for Alpha)
+  category: 'Alpha' | 'Beta' | 'Theta' | 'Delta';
+}

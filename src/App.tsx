@@ -19,6 +19,7 @@ import { TodoList } from './components/TodoList';
 import { BreatheTab } from './components/BreatheTab';
 import { SettingsTab } from './components/SettingsTab';
 import { StartSessionOverlay } from './components/StartSessionOverlay';
+import { OfflineBanner } from './components/OfflineBanner';
 
 export default function App() {
   const [channels, setChannels] = useState<SoundChannel[]>(INITIAL_SOUND_CHANNELS);
@@ -184,6 +185,9 @@ export default function App() {
             </button>
           </div>
         </header>
+
+        {/* Offline PWA Status Banner */}
+        <OfflineBanner theme={theme} />
 
         {/* Navigation Tabs Bar */}
         <nav id="app-tabs-nav" className="flex items-center gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800/80 overflow-x-auto scrollbar-none shadow-md touch-pan-x min-w-0">
